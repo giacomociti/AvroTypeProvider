@@ -13,6 +13,7 @@
       <Link>ProvidedTypesTesting.fs</Link>
     </Compile>
     <Compile Include="AvroTypes.fs" />
+    <Compile Include="ProvidedNamedTypes.fs" />
     <Compile Include="AvroProvidedTypes.fs" />
     <Compile Include="TypeProvider.fs" />
   </ItemGroup>

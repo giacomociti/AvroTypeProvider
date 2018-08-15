@@ -18,3 +18,7 @@ let schema = """
 """
 
 type T = AvroProvider<Schema=schema>
+
+let a = T.author()
+a.name <- "AAA"
+a.born <- 123

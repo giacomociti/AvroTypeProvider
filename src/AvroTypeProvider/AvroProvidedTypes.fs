@@ -4,7 +4,7 @@ open System.Collections.Generic
 open ProviderImplementation.ProvidedTypes
 open Avro
 open AvroTypes
-
+open ProvidedNamedTypes
 
 module AvroProvidedTypes =
 
@@ -56,8 +56,15 @@ module AvroProvidedTypes =
         for s in schemas do types.Add(s.Key, providedType assembly s.Value)
         types :> IReadOnlyDictionary<_,_>
 
+    let setProvidedType types providedType =
+        function
+        | Record schema -> setRecord types schema.Fields providedType
+        | Enum schema -> setEnum schema.Symbols providedType
+        | Fixed schema -> setFixed schema.Size providedType
+
     let addProvidedTypes (enclosingType: ProvidedTypeDefinition) schema =
         let assembly = enclosingType.Assembly
         let schemas = namedSchemas schema
         let types = namedTypes assembly schemas
+        for t in types do setProvidedType types t.Value schemas.[t.Key]
         for t in types do enclosingType.AddMember t.Value
