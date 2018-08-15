@@ -29,26 +29,57 @@ module ProvidedSerializationTypes =
         providedType.AddMember method
         providedType.DefineMethodOverride(method, baseType.GetMethod(method.Name))
 
+    let writePrimitiveValue (schema: PrimitiveSchema) encoder value =
+        match schema.Tag with
+        | Tag.String -> <@@ (%%encoder: Encoder).WriteString(%%value) @@>
+        | Tag.Int -> <@@ (%%encoder: Encoder).WriteInt(%%value) @@>
+        | Tag.Null -> <@@ (%%encoder: Encoder).WriteNull() @@>
+        | Tag.Long -> <@@ (%%encoder: Encoder).WriteLong(%%value) @@>
+        | Tag.Float -> <@@ (%%encoder: Encoder).WriteFloat(%%value) @@>
+        | Tag.Double -> <@@ (%%encoder: Encoder).WriteDouble(%%value) @@>
+        | Tag.Bytes -> <@@ (%%encoder: Encoder).WriteBytes(%%value) @@>
+        | Tag.Boolean -> <@@ (%%encoder: Encoder).WriteBoolean(%%value) @@>
+        | _ -> failwithf "Unknown schema type: %A" schema.Tag
+
+    let writeArray (schema: ArraySchema) encoder value =
+        <@@ // TODO
+            (%%encoder: Encoder).WriteArrayStart()
+            (%%encoder: Encoder).SetItemCount(0L)
+            (%%encoder: Encoder).WriteArrayEnd()
+        @@>
+
+    let writeMap (schema: MapSchema) encoder value =
+        <@@ // TODO
+            (%%encoder: Encoder).WriteMapStart()
+            (%%encoder: Encoder).SetItemCount(0L)
+            (%%encoder: Encoder).WriteMapEnd()
+        @@>
+
+
     let writeValue schema encoder value =
         match schema with
-        | Primitive schema -> 
-            match schema.Tag with
-            | Tag.String -> <@@ (%%encoder: Encoder).WriteString(%%value) @@>
-            | Tag.Int -> <@@ (%%encoder: Encoder).WriteInt(%%value) @@>
-            // TODO etc.
-            | _ -> <@@ () @@>
+        | Primitive schema -> writePrimitiveValue schema encoder value
         | Named schema ->
             match schema with
-            | Record schema -> <@@ () @@>
+            | Record schema -> <@@ () @@> // TODO
             | Enum schema ->
                 <@@ (%%encoder: Encoder).WriteEnum(0) @@> //TODO %%value
             | Fixed schema -> <@@ () @@>
-            
-        | Union schema -> <@@ () @@>
-        | Array schema -> <@@ () @@>
-        | Map schema -> <@@ () @@>
-
-        
+        | Union schema -> 
+            match schema with
+            | NullOrType schema -> // TODO
+                <@@ 
+                    (%%encoder: Encoder).WriteUnionIndex(0)
+                    (%%encoder: Encoder).WriteNull()
+                @@>
+            | TypeOrNull schema -> // TODO
+                <@@ 
+                    (%%encoder: Encoder).WriteUnionIndex(1)
+                    (%%encoder: Encoder).WriteNull()
+                @@>
+            | RealUnion schema -> <@@ () @@> // TODO
+        | Array schema -> writeArray schema encoder value
+        | Map schema -> writeMap schema encoder value
 
     let writeMethod providedType (schema: RecordSchema) =
         ProvidedMethod("Write",
