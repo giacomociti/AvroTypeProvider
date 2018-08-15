@@ -3,7 +3,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../paket-files/fsprojects/FSharp.TypeProviders.StarterPack/src/ProvidedTypes.fsi">
+    <!-- <Compile Include="../../paket-files/fsprojects/FSharp.TypeProviders.StarterPack/src/ProvidedTypes.fsi">
       <Link>ProvidedTypes.fsi</Link>
     </Compile>
     <Compile Include="../../paket-files/fsprojects/FSharp.TypeProviders.StarterPack/src/ProvidedTypes.fs">
@@ -11,7 +11,11 @@
     </Compile>
     <Compile Include="../../paket-files/fsprojects/FSharp.TypeProviders.StarterPack/src/ProvidedTypesTesting.fs">
       <Link>ProvidedTypesTesting.fs</Link>
-    </Compile>
-    <Compile Include="TypeProvider.fs" />
+    </Compile> -->
+    <Compile Include="AvroTypes.fs" />
+    <!-- <Compile Include="TypeProvider.fs" /> -->
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Confluent.Apache.Avro" Version="1.7.7.5" />
   </ItemGroup>
 </Project>

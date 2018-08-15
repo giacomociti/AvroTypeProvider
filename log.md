@@ -29,3 +29,7 @@
 
 - .paket/paket.exe install
 - [edit AvroTypeProvider.fsproj]
+
+### Reference Avro library
+
+- dotnet add package Confluent.Apache.Avro --version 1.7.7.5 
