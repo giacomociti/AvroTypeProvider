@@ -3,6 +3,8 @@ namespace AvroTypeProvider
 open System.Reflection
 open Microsoft.FSharp.Core.CompilerServices
 open ProviderImplementation.ProvidedTypes
+open Avro
+open AvroProvidedTypes
 
 [<TypeProvider>]
 type TypeProvider (config: TypeProviderConfig) as this =
@@ -13,6 +15,12 @@ type TypeProvider (config: TypeProviderConfig) as this =
     let providedAssembly = ProvidedAssembly()
 
     let createType (typeName, schema) =
+        let json =
+            if System.IO.File.Exists schema
+            then System.IO.File.ReadAllText schema
+            else schema
+        let avroSchema = Schema.Parse json :?> NamedSchema
+
         let enclosingType =
             ProvidedTypeDefinition(
                 assembly = providedAssembly,
@@ -21,6 +29,8 @@ type TypeProvider (config: TypeProviderConfig) as this =
                 baseType = Some typeof<obj>,
                 isErased = false,
                 hideObjectMethods = true)
+
+        addProvidedTypes enclosingType avroSchema
 
         providedAssembly.AddTypes [enclosingType]
         enclosingType
