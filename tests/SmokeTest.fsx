@@ -6,6 +6,7 @@
 
 open Avro
 open Avro.File
+open Avro.Generic
 
 let authorFile = "tests/temp/author.avro"
 
@@ -13,6 +14,12 @@ let serialize writer (avroFilePath: string) items =
     let codec = Codec.CreateCodec(Codec.Type.Deflate)
     use fileWriter = DataFileWriter.OpenWriter(writer, avroFilePath, codec)
     items |> List.iter fileWriter.Append
+
+let deserialize (avroFilePath: string) = [
+
+    use fileReader = DataFileReader<GenericRecord>.OpenReader(avroFilePath)
+    for item in fileReader.NextEntries do yield item
+]
 
 [<Literal>]
 let schema = """
@@ -41,3 +48,5 @@ a.suit <- T.Suit.CLUBS
 
 let w = T.authorDatumWriter()
 serialize w authorFile [a]
+
+deserialize authorFile

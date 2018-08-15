@@ -2,12 +2,13 @@ namespace AvroTypeProvider
 
 #nowarn "25"
 
+open System.Reflection
 open Microsoft.FSharp.Quotations
 open ProviderImplementation.ProvidedTypes
 open Avro
 open Avro.IO
-open System.Reflection
 open Avro.Generic
+open AvroTypes
 
 module ProvidedSerializationTypes =
 
@@ -28,6 +29,27 @@ module ProvidedSerializationTypes =
         providedType.AddMember method
         providedType.DefineMethodOverride(method, baseType.GetMethod(method.Name))
 
+    let writeValue schema encoder value =
+        match schema with
+        | Primitive schema -> 
+            match schema.Tag with
+            | Tag.String -> <@@ (%%encoder: Encoder).WriteString(%%value) @@>
+            | Tag.Int -> <@@ (%%encoder: Encoder).WriteInt(%%value) @@>
+            // TODO etc.
+            | _ -> <@@ () @@>
+        | Named schema ->
+            match schema with
+            | Record schema -> <@@ () @@>
+            | Enum schema ->
+                <@@ (%%encoder: Encoder).WriteEnum(0) @@> //TODO %%value
+            | Fixed schema -> <@@ () @@>
+            
+        | Union schema -> <@@ () @@>
+        | Array schema -> <@@ () @@>
+        | Map schema -> <@@ () @@>
+
+        
+
     let writeMethod providedType (schema: RecordSchema) =
         ProvidedMethod("Write",
             parameters = [ ProvidedParameter("datum", providedType)
@@ -38,8 +60,7 @@ module ProvidedSerializationTypes =
                 |> Seq.map (fun field ->
                     let property = providedType.GetProperty field.Name
                     let value = Expr.PropertyGet(datum, property)
-                    let o = Expr.Coerce(value, typeof<obj>)
-                    <@@ printfn "TODO write %A" %%o @@>)
+                    writeValue field.Schema encoder value)
                 |> sequential))
 
     let setRecordWriter 
