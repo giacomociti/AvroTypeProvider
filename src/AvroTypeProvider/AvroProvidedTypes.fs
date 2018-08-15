@@ -5,6 +5,7 @@ open ProviderImplementation.ProvidedTypes
 open Avro
 open AvroTypes
 open ProvidedNamedTypes
+open ProvidedSerializationTypes
 
 module AvroProvidedTypes =
 
@@ -62,9 +63,17 @@ module AvroProvidedTypes =
         | Enum schema -> setEnum schema.Symbols providedType
         | Fixed schema -> setFixed schema.Size providedType
 
+    let private setWriter enclosingType providedType =
+        function
+        | Record schema ->
+            setRecordWriter enclosingType providedType schema
+        | Enum _ -> () //TODO
+        | Fixed _ -> () //TODO
+
     let addProvidedTypes (enclosingType: ProvidedTypeDefinition) schema =
         let assembly = enclosingType.Assembly
         let schemas = namedSchemas schema
         let types = namedTypes assembly schemas
         for t in types do setProvidedType types t.Value schemas.[t.Key]
+        for t in types do setWriter enclosingType t.Value schemas.[t.Key]
         for t in types do enclosingType.AddMember t.Value
