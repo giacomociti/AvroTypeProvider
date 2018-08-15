@@ -37,4 +37,8 @@ module ProvidedNamedTypes =
 
     let setFixed size providedType = () //TODO
 
-    let setEnum symbols providedType = () //TODO
+    let setEnum symbols (providedType: ProvidedTypeDefinition) =
+        providedType.SetEnumUnderlyingType typeof<int>
+        symbols
+        |> Seq.mapi (fun i s -> ProvidedField.Literal(s, providedType, i))
+        |> Seq.iter providedType.AddMember

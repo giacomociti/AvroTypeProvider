@@ -13,6 +13,12 @@ let schema = """
     "fields": [
         {"name": "name", "type": "string"},
         {"name": "born", "type": "int"},
+        {"name": "suit", "type" :
+            { "type": "enum",
+              "name": "Suit",
+              "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
+            }
+        }
     ]
 }
 """
@@ -22,3 +28,4 @@ type T = AvroProvider<Schema=schema>
 let a = T.author()
 a.name <- "AAA"
 a.born <- 123
+a.suit <- T.Suit.CLUBS
