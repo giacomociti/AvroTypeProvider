@@ -16,11 +16,11 @@
 
 ### Add main project
 
-mkdir src
-cd src
-mkdir AvroTypeProvider
-cd AvroTypeProvider
-dotnet new sln
-dotnet new classlib -lang F#
-dotnet sln add AvroTypeProvider.fsproj
-dotnet build
+- mkdir src
+- cd src
+- mkdir AvroTypeProvider
+- cd AvroTypeProvider
+- dotnet new sln
+- dotnet new classlib -lang F#
+ -dotnet sln add AvroTypeProvider.fsproj
+- dotnet build
