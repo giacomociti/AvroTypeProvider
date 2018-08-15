@@ -22,5 +22,10 @@
 - cd AvroTypeProvider
 - dotnet new sln
 - dotnet new classlib -lang F#
- -dotnet sln add AvroTypeProvider.fsproj
+- dotnet sln add AvroTypeProvider.fsproj
 - dotnet build
+
+### Reference Type Provider SDK files
+
+- .paket/paket.exe install
+- [edit AvroTypeProvider.fsproj]
