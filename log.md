@@ -33,3 +33,7 @@
 ### Reference Avro library
 
 - dotnet add package Confluent.Apache.Avro --version 1.7.7.5 
+
+### Reference libraries in test
+
+- Hack: Referenced downloaded nuget packages in smoke test
