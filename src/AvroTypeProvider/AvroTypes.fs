@@ -30,14 +30,20 @@ module AvroTypes =
         | [s1; s2] when s2.Tag = Tag.Null -> TypeOrNull s1
         | _ -> RealUnion schemas
 
-    let private arrayType t =
-        ProvidedTypeBuilder.MakeGenericType(typedefof<IList<_>>, [t])
+    let arrayType t =
+        typedefof<IList<_>>
+            .GetGenericTypeDefinition()
+            .MakeGenericType [| t |]
 
-    let private mapType t =
-        ProvidedTypeBuilder.MakeGenericType(typedefof<IDictionary<string, _>>, [t])        
+    let mapType t =
+        typeof<IDictionary<string, _>>
+            .GetGenericTypeDefinition()
+            .MakeGenericType [| t |]       
 
-    let private nullableType t =
-        ProvidedTypeBuilder.MakeGenericType(typedefof<System.Nullable<_>>, [t])
+    let nullableType t = 
+        typeof<System.Nullable<_>>
+            .GetGenericTypeDefinition()
+            .MakeGenericType [| t |]
 
     let rec getType (types: IReadOnlyDictionary<_,_>) =
         function

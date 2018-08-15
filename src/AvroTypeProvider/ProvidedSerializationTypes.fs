@@ -56,7 +56,7 @@ module ProvidedSerializationTypes =
         @@>
 
 
-    let writeValue schema encoder value =
+    let rec writeValue schema encoder value =
         match schema with
         | Primitive schema -> writePrimitiveValue schema encoder value
         | Named schema ->
@@ -72,6 +72,17 @@ module ProvidedSerializationTypes =
                     (%%encoder: Encoder).WriteUnionIndex(0)
                     (%%encoder: Encoder).WriteNull()
                 @@>
+                // let v = Expr.DefaultValue value.Type
+                // Expr.IfThenElse(
+                //     <@@ true @@>,
+                //     <@@
+                //         (%%encoder: Encoder).WriteUnionIndex(0)
+                //         (%%encoder: Encoder).WriteNull()
+                //     @@>,
+                //     Expr.Sequential(
+                //         <@@ (%%encoder: Encoder).WriteUnionIndex(1) @@>,
+                //         writeValue schema encoder v) // TODO value.Value
+                //     )      
             | TypeOrNull schema -> // TODO
                 <@@ 
                     (%%encoder: Encoder).WriteUnionIndex(1)

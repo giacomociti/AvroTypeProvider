@@ -29,7 +29,13 @@ let schema = """
     "fields": [
         {"name": "name", "type": "string"},
         {"name": "born", "type": "int"},
-        {"name": "suit", "type" :
+        {"name": "foo", "type": ["null", "int"]},
+        {"name": "foos", "type": 
+            { "type": "array",
+              "items": "string"
+            } 
+        },
+        {"name": "suit", "type":
             { "type": "enum",
               "name": "Suit",
               "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
@@ -45,7 +51,8 @@ let a = T.author()
 a.name <- "AAA"
 a.born <- 123
 a.suit <- T.Suit.CLUBS
-
+a.foo <- System.Nullable 5
+a.foos <- ResizeArray()
 let w = T.authorDatumWriter()
 serialize w authorFile [a]
 
