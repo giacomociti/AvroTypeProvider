@@ -34,7 +34,7 @@ type TypeProvider (config: TypeProviderConfig) as this =
 
         providedAssembly.AddTypes [enclosingType]
         enclosingType
-    
+
     do
         let avroProvider =
             ProvidedTypeDefinition(

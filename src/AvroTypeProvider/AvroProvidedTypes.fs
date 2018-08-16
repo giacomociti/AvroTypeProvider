@@ -26,7 +26,7 @@ module AvroProvidedTypes =
     let private namedSchemas schema =
         let schemas = Dictionary()
 
-        let previouslyCollected = 
+        let previouslyCollected =
             function
             | Named n ->
                 if schemas.ContainsKey n.SchemaName

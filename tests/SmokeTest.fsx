@@ -5,10 +5,34 @@
 #r "AvroTypeProvider.dll"
 
 open Avro
+
+type T = AvroProvider<Schema="""
+{
+    "type": "record",
+    "name": "author",
+    "fields": [
+        {"name": "name", "type": "string"},
+        {"name": "born", "type": "int"},
+        {"name": "foo", "type": ["null", "int"]},
+        {"name": "foos", "type":
+            { "type": "array",
+              "items": "string"
+            }
+        },
+        {"name": "fooDict", "type":
+            { "type": "map",
+              "values": "int"
+            }
+        }
+
+    ]
+}
+""">
+
 open Avro.File
 open Avro.Generic
 
-let authorFile = "tests/temp/author.avro"
+let authorFile = __SOURCE_DIRECTORY__ + "/temp/author.avro"
 
 let serialize writer (avroFilePath: string) items =
     let codec = Codec.CreateCodec(Codec.Type.Deflate)
@@ -21,39 +45,19 @@ let deserialize (avroFilePath: string) = [
     for item in fileReader.NextEntries do yield item
 ]
 
-[<Literal>]
-let schema = """
-{
-    "type": "record",
-    "name": "author",
-    "fields": [
-        {"name": "name", "type": "string"},
-        {"name": "born", "type": "int"},
-        {"name": "foo", "type": ["null", "int"]},
-        {"name": "foos", "type": 
-            { "type": "array",
-              "items": "string"
-            } 
-        },
-        {"name": "suit", "type":
-            { "type": "enum",
-              "name": "Suit",
-              "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
-            }
-        }
-    ]
-}
-"""
-
-type T = AvroProvider<Schema=schema>
 
 let a = T.author()
 a.name <- "AAA"
 a.born <- 123
-a.suit <- T.Suit.CLUBS
-a.foo <- System.Nullable 5
-a.foos <- ResizeArray()
+//a.suit <- T.Suit.CLUBS
+a.foo <- System.Nullable(3)
+a.foos <- ResizeArray(["aa"; "bb"])
+a.fooDict <- dict ["a",11; "b",22]
 let w = T.authorDatumWriter()
 serialize w authorFile [a]
 
-deserialize authorFile
+let items = deserialize authorFile
+
+items.[0].["foos"]
+items.[0].["fooDict"]
+

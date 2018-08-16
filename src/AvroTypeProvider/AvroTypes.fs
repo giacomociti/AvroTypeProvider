@@ -32,17 +32,18 @@ module AvroTypes =
 
     let arrayType t =
         typedefof<IList<_>>
-            .GetGenericTypeDefinition()
+
+            //.GetGenericTypeDefinition()
             .MakeGenericType [| t |]
 
     let mapType t =
-        typeof<IDictionary<string, _>>
-            .GetGenericTypeDefinition()
-            .MakeGenericType [| t |]       
+        typedefof<IDictionary<_, _>>
+            //.GetGenericTypeDefinition()
+            .MakeGenericType [| typeof<string>; t |]
 
-    let nullableType t = 
-        typeof<System.Nullable<_>>
-            .GetGenericTypeDefinition()
+    let nullableType t =
+        typedefof<System.Nullable<_>>
+            //.GetGenericTypeDefinition()
             .MakeGenericType [| t |]
 
     let rec getType (types: IReadOnlyDictionary<_,_>) =
