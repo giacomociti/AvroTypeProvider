@@ -7,18 +7,34 @@
 open Avro
 open Avro.Generic
 
-type T = AvroProvider<Schema="""
+[<Literal>]
+let schema = """
 {
     "type": "record",
     "name": "author",
     "fields": [
         {"name": "name", "type": "string"},
         {"name": "born", "type": "int"},
+        {"name": "score", "type": {"type": "array", "items": "int"}},
+        {"name": "scoreOpt", "type": {"type": "array", "items": ["null", "int"]}},
+        {"name": "codes", "type": {"type": "map", "values": "int"}},
         {"name": "foo", "type": ["null", "int"]}
     ]
 }
-""">
+"""
 
-let a = T.author(name="Joe", born=1900, foo=System.Nullable())
+Schema.Parse schema
 
-printfn "name %s, born %d, foo %A" a.name a.born a.foo
+type T = AvroProvider<Schema=schema>
+
+let score = ResizeArray([1;2])
+let scoreOpt = ResizeArray([System.Nullable(7)])
+let codes = dict ["A",1; "B",3]
+let a = T.author(name="Joe", 
+                 born=1900, 
+                 score=score,
+                 scoreOpt = scoreOpt,
+                 codes = codes,
+                 foo=System.Nullable())
+
+printfn "%A" (a.name, a.born, a.score, a.scoreOpt, a.codes, a.foo)
