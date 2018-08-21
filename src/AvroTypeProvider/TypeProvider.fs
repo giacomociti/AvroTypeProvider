@@ -12,7 +12,10 @@ type TypeProvider (config: TypeProviderConfig) as this =
 
     let ns = "Avro"
     let asm = Assembly.GetExecutingAssembly()
-    let providedAssembly = ProvidedAssembly()
+    //let providedAssembly = ProvidedAssembly()
+
+    // check we contain a copy of runtime files, and are not referencing the runtime DLL
+    do assert (typeof<Record>.Assembly.GetName().Name = asm.GetName().Name) 
 
     let createType (typeName, schema) =
         let json =
@@ -20,19 +23,15 @@ type TypeProvider (config: TypeProviderConfig) as this =
             then System.IO.File.ReadAllText schema
             else schema
         let avroSchema = Schema.Parse json :?> NamedSchema
-
         let enclosingType =
             ProvidedTypeDefinition(
-                assembly = providedAssembly,
+                assembly = asm,
                 namespaceName = ns,
                 className = typeName,
                 baseType = Some typeof<obj>,
-                isErased = false,
+                isErased = true,
                 hideObjectMethods = true)
-
         addProvidedTypes enclosingType avroSchema
-
-        providedAssembly.AddTypes [enclosingType]
         enclosingType
 
     do
@@ -42,7 +41,7 @@ type TypeProvider (config: TypeProviderConfig) as this =
                 namespaceName = ns,
                 className = "AvroProvider",
                 baseType = Some typeof<obj>,
-                isErased = false)
+                isErased = true)
 
         let parameters = [ProvidedStaticParameter("Schema", typeof<string>)]
         avroProvider.DefineStaticParameters(parameters, (fun typeName args ->

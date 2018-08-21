@@ -5,21 +5,20 @@ open ProviderImplementation.ProvidedTypes
 open Avro
 open AvroTypes
 open ProvidedNamedTypes
-open ProvidedSerializationTypes
 
 module AvroProvidedTypes =
 
     let private providedType assembly (schema: NamedSchema) =
         let baseType =
             match schema with
-            | Enum _ -> typeof<System.Enum>
-            | _ -> typeof<obj>
+            | Enum _ -> typeof<Enum>
+            | _ -> typeof<Record>
         ProvidedTypeDefinition(
             assembly = assembly,
             namespaceName = schema.Namespace,
             className = schema.Name,
             baseType = Some baseType,
-            isErased = false,
+            isErased = true,
             hideObjectMethods = true)
 
 
@@ -59,21 +58,13 @@ module AvroProvidedTypes =
 
     let setProvidedType types providedType =
         function
-        | Record schema -> setRecord types schema.Fields providedType
+        | Record schema -> setRecord types schema providedType
         | Enum schema -> setEnum schema.Symbols providedType
         | Fixed schema -> setFixed schema.Size providedType
-
-    let private setWriter enclosingType providedType =
-        function
-        | Record schema ->
-            setRecordWriter enclosingType providedType schema
-        | Enum _ -> () //TODO
-        | Fixed _ -> () //TODO
 
     let addProvidedTypes (enclosingType: ProvidedTypeDefinition) schema =
         let assembly = enclosingType.Assembly
         let schemas = namedSchemas schema
         let types = namedTypes assembly schemas
         for t in types do setProvidedType types t.Value schemas.[t.Key]
-        for t in types do setWriter enclosingType t.Value schemas.[t.Key]
         for t in types do enclosingType.AddMember t.Value

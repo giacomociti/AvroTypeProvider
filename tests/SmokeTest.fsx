@@ -5,6 +5,7 @@
 #r "AvroTypeProvider.dll"
 
 open Avro
+open Avro.Generic
 
 type T = AvroProvider<Schema="""
 {
@@ -13,51 +14,11 @@ type T = AvroProvider<Schema="""
     "fields": [
         {"name": "name", "type": "string"},
         {"name": "born", "type": "int"},
-        {"name": "foo", "type": ["null", "int"]},
-        {"name": "foos", "type":
-            { "type": "array",
-              "items": "string"
-            }
-        },
-        {"name": "fooDict", "type":
-            { "type": "map",
-              "values": "int"
-            }
-        }
-
+        {"name": "foo", "type": ["null", "int"]}
     ]
 }
 """>
 
-open Avro.File
-open Avro.Generic
+let a = T.author(name="Joe", born=1900, foo=System.Nullable())
 
-let authorFile = __SOURCE_DIRECTORY__ + "/temp/author.avro"
-
-let serialize writer (avroFilePath: string) items =
-    let codec = Codec.CreateCodec(Codec.Type.Deflate)
-    use fileWriter = DataFileWriter.OpenWriter(writer, avroFilePath, codec)
-    items |> List.iter fileWriter.Append
-
-let deserialize (avroFilePath: string) = [
-
-    use fileReader = DataFileReader<GenericRecord>.OpenReader(avroFilePath)
-    for item in fileReader.NextEntries do yield item
-]
-
-
-let a = T.author()
-a.name <- "AAA"
-a.born <- 123
-//a.suit <- T.Suit.CLUBS
-a.foo <- System.Nullable(3)
-a.foos <- ResizeArray(["aa"; "bb"])
-a.fooDict <- dict ["a",11; "b",22]
-let w = T.authorDatumWriter()
-serialize w authorFile [a]
-
-let items = deserialize authorFile
-
-items.[0].["foos"]
-items.[0].["fooDict"]
-
+printfn "name %s, born %d, foo %A" a.name a.born a.foo

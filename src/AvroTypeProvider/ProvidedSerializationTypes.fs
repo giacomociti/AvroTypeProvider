@@ -165,7 +165,7 @@ module ProvidedSerializationTypes =
                 namespaceName = "",
                 className = providedRecordType.Name + "DatumWriter",
                 baseType = Some typeof<obj>,
-                isErased = false,
+                isErased = true,
                 hideObjectMethods = true)
 
         let schemaField = ProvidedField("_schema", typeof<Schema>)
