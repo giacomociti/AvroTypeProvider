@@ -15,10 +15,15 @@ let schema = """
     "fields": [
         {"name": "name", "type": "string"},
         {"name": "born", "type": "int"},
+        {"name": "inner", "type": 
+            {"type": "record",
+             "name": "Inner",
+             "fields": [{"name": "id", "type": "string"}]}},
+        {"name": "innerOpt", "type": ["null", "Inner"]},
+        {"name": "innerMap", "type": {"type": "map", "values": "Inner"}},             
         {"name": "score", "type": {"type": "array", "items": "int"}},
         {"name": "scoreOpt", "type": {"type": "array", "items": ["null", "int"]}},
-        {"name": "codes", "type": {"type": "map", "values": "int"}},
-        {"name": "foo", "type": ["null", "int"]}
+        {"name": "codes", "type": {"type": "map", "values": "int"}}        
     ]
 }
 """
@@ -27,14 +32,14 @@ Schema.Parse schema
 
 type T = AvroProvider<Schema=schema>
 
-let score = ResizeArray([1;2])
-let scoreOpt = ResizeArray([System.Nullable(7)])
-let codes = dict ["A",1; "B",3]
-let a = T.author(name="Joe", 
-                 born=1900, 
-                 score=score,
-                 scoreOpt = scoreOpt,
-                 codes = codes,
-                 foo=System.Nullable())
+let a = T.author(name="Joe",
+                 born=1900,
+                 inner = T.Inner("AA"),
+                 innerOpt = T.Inner("A"),
+                 innerMap = dict ["k", T.Inner("C")],
+                 score = ResizeArray([1;2]),
+                 scoreOpt = ResizeArray([System.Nullable(7)]),
+                 codes = dict ["A",1; "B",3])
 
-printfn "%A" (a.name, a.born, a.score, a.scoreOpt, a.codes, a.foo)
+printfn "%A" (a.name, a.born, a.score, a.scoreOpt, a.codes)
+printfn "%A" (a.inner.id, a.innerOpt, a.innerMap)
