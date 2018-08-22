@@ -15,6 +15,7 @@ let schema = """
     "fields": [
         {"name": "name", "type": "string"},
         {"name": "born", "type": "int"},
+        {"name": "word", "type": {"type": "fixed", "size": 2, "name": "Word"}},
         {"name": "inner", "type": 
             {"type": "record",
              "name": "Inner",
@@ -34,6 +35,7 @@ type T = AvroProvider<Schema=schema>
 
 let a = T.author(name="Joe",
                  born=1900,
+                 word = T.Word [| 2uy; 3uy |],
                  inner = T.Inner("AA"),
                  innerOpt = T.Inner("A"),
                  innerMap = dict ["k", T.Inner("C")],
@@ -42,4 +44,4 @@ let a = T.author(name="Joe",
                  codes = dict ["A",1; "B",3])
 
 printfn "%A" (a.name, a.born, a.score, a.scoreOpt, a.codes)
-printfn "%A" (a.inner.id, a.innerOpt, a.innerMap)
+printfn "%A" (a.word, a.inner.id, a.innerOpt, a.innerMap)

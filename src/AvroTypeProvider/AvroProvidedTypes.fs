@@ -11,8 +11,9 @@ module AvroProvidedTypes =
     let private providedType assembly (schema: NamedSchema) =
         let baseType =
             match schema with
+            | Record _ -> typeof<Record>
+            | Fixed _ -> typeof<Fixed>
             | Enum _ -> typeof<Enum>
-            | _ -> typeof<Record>
         ProvidedTypeDefinition(
             assembly = assembly,
             namespaceName = schema.Namespace,
@@ -59,8 +60,8 @@ module AvroProvidedTypes =
     let setProvidedType types providedType =
         function
         | Record schema -> setRecord types schema providedType
-        | Enum schema -> setEnum schema.Symbols providedType
-        | Fixed schema -> setFixed schema.Size providedType
+        | Enum schema -> setEnum schema providedType
+        | Fixed schema -> setFixed schema providedType
 
     let addProvidedTypes (enclosingType: ProvidedTypeDefinition) schema =
         let assembly = enclosingType.Assembly

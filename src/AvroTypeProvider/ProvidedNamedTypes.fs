@@ -10,15 +10,17 @@ open Avro.Generic
 
 module ProvidedNamedTypes =
 
-    let private getProperty (fieldName, fieldType) =
-        ProvidedProperty(fieldName, fieldType,
-            getterCode = (fun [record] ->
-                <@@ (%%record: Record).GenericRecord.Item fieldName @@>))
-
-    let private getParameter (fieldName, fieldType) =
-        ProvidedParameter(fieldName, fieldType)         
-
     let setRecord types (schema:RecordSchema) (providedType: ProvidedTypeDefinition) =
+
+        let getProperty (fieldName, fieldType) =
+            ProvidedProperty(fieldName, fieldType,
+                getterCode = (fun [record] ->
+                    <@@ (%%record: Record).GenericRecord.Item fieldName @@>))
+
+        let getParameter (fieldName, fieldType) =
+            ProvidedParameter(fieldName, fieldType)         
+
+
         let fields =
             schema.Fields 
             |> Seq.map (fun f -> f.Name, getType types f.Schema)
@@ -28,10 +30,6 @@ module ProvidedNamedTypes =
         let parameters = fields |> List.map getParameter        
 
         let schemaText = schema.ToString()
-
-        let setValue (r: Expr) fieldName fieldType fieldValue =
-            let v = Expr.Coerce(fieldValue, fieldType)
-            <@@ (%%r:GenericRecord).Add(fieldName, v :> obj) @@>
         
         let ctor = ProvidedConstructor(parameters, invokeCode = fun pars ->
           ( let s = <@@ (Schema.Parse schemaText) :?> RecordSchema @@>
@@ -44,14 +42,18 @@ module ProvidedNamedTypes =
             <@@ Runtime.CreateRecord(%%s, %%array) @@> ))
             
         providedType.AddMember ctor
-        providedType.AddMembers properties
+        providedType.AddMembers properties        
 
-        
+    let setFixed (schema: FixedSchema) (providedType: ProvidedTypeDefinition) =
+        let schemaText = schema.ToString()
+        let parameter = ProvidedParameter("bytes", typeof<byte[]>)
+        let ctor = ProvidedConstructor([parameter], invokeCode = fun [par] ->
+          ( let s = <@@ (Schema.Parse schemaText) :?> FixedSchema @@>
+            <@@ Runtime.CreateFixed(%%s, %%par) @@> ))
+        providedType.AddMember ctor
 
-    let setFixed size providedType = () //TODO
-
-    let setEnum symbols (providedType: ProvidedTypeDefinition) =
+    let setEnum (schema: EnumSchema) (providedType: ProvidedTypeDefinition) =
         providedType.SetEnumUnderlyingType typeof<int>
-        symbols
+        schema.Symbols
         |> Seq.mapi (fun i s -> ProvidedField.Literal(s, providedType, i))
         |> Seq.iter providedType.AddMember
