@@ -24,6 +24,11 @@ let schema = """
         {"name": "innerMap", "type": {"type": "map", "values": "Inner"}},             
         {"name": "score", "type": {"type": "array", "items": "int"}},
         {"name": "scoreOpt", "type": {"type": "array", "items": ["null", "int"]}},
+        {"name": "suit", "type": 
+            { "type": "enum",
+              "name": "Suit",
+              "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"] }
+	    },
         {"name": "codes", "type": {"type": "map", "values": "int"}}        
     ]
 }
@@ -41,7 +46,8 @@ let a = T.author(name="Joe",
                  innerMap = dict ["k", T.Inner("C")],
                  score = ResizeArray([1;2]),
                  scoreOpt = ResizeArray([System.Nullable(7)]),
+                 suit = T.Suit.CLUBS,
                  codes = dict ["A",1; "B",3])
 
 printfn "%A" (a.name, a.born, a.score, a.scoreOpt, a.codes)
-printfn "%A" (a.word, a.inner.id, a.innerOpt, a.innerMap)
+printfn "%A" (a.word, a.suit, a.inner.id, a.innerOpt, a.innerMap)

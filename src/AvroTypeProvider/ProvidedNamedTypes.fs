@@ -53,7 +53,14 @@ module ProvidedNamedTypes =
         providedType.AddMember ctor
 
     let setEnum (schema: EnumSchema) (providedType: ProvidedTypeDefinition) =
-        providedType.SetEnumUnderlyingType typeof<int>
-        schema.Symbols
-        |> Seq.mapi (fun i s -> ProvidedField.Literal(s, providedType, i))
-        |> Seq.iter providedType.AddMember
+        let schemaText = schema.ToString()
+        let s = <@@ (Schema.Parse schemaText) :?> EnumSchema @@>
+        let properties =
+            schema.Symbols
+            |> Seq.map (fun symbol ->
+                ProvidedProperty(symbol, providedType,
+                    getterCode = (fun _ ->
+                        <@@ Runtime.CreateEnum(%%s, symbol) @@>),
+                    isStatic = true))
+            |> Seq.toList
+        providedType.AddMembers properties
