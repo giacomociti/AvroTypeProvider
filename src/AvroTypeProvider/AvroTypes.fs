@@ -1,50 +1,18 @@
 namespace AvroTypeProvider
 
 open System.Collections.Generic
-open ProviderImplementation.ProvidedTypes
-open Avro
+open SchemaParsing
 
 module AvroTypes =
 
-    type Tag = Avro.Schema.Type
-    let (| Primitive | Named | Union | Array | Map |) (schema: Schema) =
-        match schema with
-        | :? PrimitiveSchema as s -> Primitive s
-        | :? NamedSchema as s -> Named s
-        | :? UnionSchema as s -> Union s
-        | :? ArraySchema as s -> Array s
-        | :? MapSchema as s -> Map s
-        | _ -> failwithf "Unknown schema type: %A" schema.Tag
-
-    let (| Record | Enum | Fixed |) (schema: NamedSchema) =
-        match schema.Tag with
-        | Tag.Record -> Record (schema :?> RecordSchema)
-        | Tag.Enumeration -> Enum (schema :?> EnumSchema)
-        | Tag.Fixed -> Fixed (schema :?> FixedSchema)
-        | _ -> failwithf "Unknown schema type: %A" schema.Tag
-
-    let (| NullOrType | TypeOrNull | RealUnion |) (schema: UnionSchema) =
-        let schemas = schema.Schemas |> Seq.toList
-        match schemas with
-        | [s1; s2] when s1.Tag = Tag.Null -> NullOrType s2
-        | [s1; s2] when s2.Tag = Tag.Null -> TypeOrNull s1
-        | _ -> RealUnion schemas
-
     let arrayType t =
-        typedefof<IList<_>>
-
-            //.GetGenericTypeDefinition()
-            .MakeGenericType [| t |]
+        typedefof<IList<_>>.MakeGenericType [| t |]
 
     let mapType t =
-        typedefof<IDictionary<_, _>>
-            //.GetGenericTypeDefinition()
-            .MakeGenericType [| typeof<string>; t |]
+        typedefof<IDictionary<_, _>>.MakeGenericType [| typeof<string>; t |]
 
     let nullableType t =
-        typedefof<System.Nullable<_>>
-            //.GetGenericTypeDefinition()
-            .MakeGenericType [| t |]
+        typedefof<System.Nullable<_>>.MakeGenericType [| t |]
 
     let rec getType (types: IReadOnlyDictionary<_,_>) =
         function

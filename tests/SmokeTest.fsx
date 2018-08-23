@@ -5,6 +5,8 @@
 #r "AvroTypeProvider.dll"
 
 open Avro
+open Avro.IO
+open Avro.File
 open Avro.Generic
 
 [<Literal>]
@@ -34,20 +36,25 @@ let schema = """
 }
 """
 
+
 Schema.Parse schema
 
-type T = AvroProvider<Schema=schema>
+type X = AvroProvider<Schema=schema>
+type T = X.Types
+let f = X.Factory()
 
-let a = T.author(name="Joe",
+let a = f.author(name="Joe",
                  born=1900,
-                 word = T.Word [| 2uy; 3uy |],
-                 inner = T.Inner("AA"),
-                 innerOpt = T.Inner("A"),
-                 innerMap = dict ["k", T.Inner("C")],
+                 word = f.Word [| 2uy; 3uy |],
+                 inner = f.Inner("AA"),
+                 innerOpt = f.Inner("A"),
+                 innerMap = dict ["k", f.Inner("C")],
                  score = ResizeArray([1;2]),
                  scoreOpt = ResizeArray([System.Nullable(7)]),
-                 suit = T.Suit.CLUBS,
+                 suit = f.Suit.CLUBS,
                  codes = dict ["A",1; "B",3])
 
 printfn "%A" (a.name, a.born, a.score, a.scoreOpt, a.codes)
-printfn "%A" (a.word, a.suit, a.inner.id, a.innerOpt, a.innerMap)
+printfn "%A" (a.word.Value, a.suit.Value, a.inner.id, a.innerOpt, a.innerMap)
+
+

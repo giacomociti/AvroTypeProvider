@@ -22,7 +22,7 @@ type TypeProvider (config: TypeProviderConfig) as this =
             if System.IO.File.Exists schema
             then System.IO.File.ReadAllText schema
             else schema
-        let avroSchema = Schema.Parse json :?> NamedSchema
+        let avroSchema = Schema.Parse json :?> RecordSchema
         let enclosingType =
             ProvidedTypeDefinition(
                 assembly = asm,
