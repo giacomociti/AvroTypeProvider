@@ -40,7 +40,7 @@ let schema = """
 
 let s = Schema.Parse schema
 
-type T = AvroProvider<Schema=schema>
+type T = AvroProvider<schema>
 
 let f = T.Factory()
 
@@ -67,7 +67,7 @@ let a = f.author(name="Joe",
 printfn "%A" (a.name, a.born, a.score, a.scoreOpt, a.codes)
 printfn "%A" (a.word.Value, a.suit.Value, a.inner.id, a.innerOpt, a.innerMap)
 
-let path = "test.avro"
+let path = System.IO.Path.Combine(__SOURCE_DIRECTORY__, "temp", "test.avro")
 T.Write (path, [a])
 let a' = T.Read(path) |> Seq.exactlyOne
 a = a' // still false?

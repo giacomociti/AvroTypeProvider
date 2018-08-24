@@ -5,6 +5,8 @@ open Microsoft.FSharp.Core.CompilerServices
 open ProviderImplementation.ProvidedTypes
 open Avro
 open AvroProvidedTypes
+open System.IO
+open Avro.File
 
 [<TypeProvider>]
 type TypeProvider (config: TypeProviderConfig) as this =
@@ -16,12 +18,20 @@ type TypeProvider (config: TypeProviderConfig) as this =
     // check we contain a copy of runtime files, and are not referencing the runtime DLL
     do assert (typeof<Factory>.Assembly.GetName().Name = asm.GetName().Name)
 
+    let readFromFile path =
+        let fi = FileInfo path
+        if fi.Extension = ".avro"
+        then
+            use r = DataFileReader.OpenReader(path)
+            r.GetSchema()
+        else System.IO.File.ReadAllText path |> Schema.Parse
+
     let createType (typeName, schema) =
-        let json =
+        let recordSchema =
             if System.IO.File.Exists schema
-            then System.IO.File.ReadAllText schema
-            else schema
-        let avroSchema = Schema.Parse json :?> RecordSchema
+            then readFromFile schema
+            else Schema.Parse schema
+            :?> RecordSchema
         let enclosingType =
             ProvidedTypeDefinition(
                 assembly = asm,
@@ -30,7 +40,7 @@ type TypeProvider (config: TypeProviderConfig) as this =
                 baseType = Some typeof<obj>,
                 isErased = true,
                 hideObjectMethods = true)
-        addProvidedTypes enclosingType avroSchema
+        addProvidedTypes enclosingType recordSchema
         enclosingType
 
     do
