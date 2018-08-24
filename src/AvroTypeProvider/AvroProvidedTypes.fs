@@ -4,6 +4,7 @@ open System.Collections.Generic
 open Microsoft.FSharp.Quotations
 open ProviderImplementation.ProvidedTypes
 open Avro
+open Avro.File
 open Avro.Generic
 open AvroTypes
 open SchemaParsing
@@ -141,6 +142,41 @@ module AvroProvidedTypes =
         | Enum schema -> createEnum factory schema providedType
         | Fixed schema -> createFixed factory schema providedType
 
+    let getWriteMethod recordType recordSchema =
+        let schemaText = recordSchema.ToString()
+        let itemsType = typedefof<seq<_>>.MakeGenericType([|recordType|])
+        ProvidedMethod(
+            methodName = "Write",
+            parameters = [ ProvidedParameter("path", typeof<string>)
+                        //    ProvidedParameter("codec", typeof<Codec>)
+                           ProvidedParameter("items", itemsType)],
+            returnType = typeof<System.Void>,
+            invokeCode = (fun [path; items] ->
+                <@@
+                    let s = Schema.Parse schemaText
+                    let gdw = GenericDatumWriter<GenericRecord>(s)
+                    use w = DataFileWriter.OpenWriter(gdw, (%%path: string))
+                    for x in %%items do w.Append(x :> GenericRecord)
+                @@>),
+            isStatic = true)
+
+    let getReadMethod recordType =
+        let itemsType = typedefof<seq<_>>.MakeGenericType([|recordType|])
+        ProvidedMethod(
+            methodName = "Read",
+            parameters = [ ProvidedParameter("path", typeof<string>) ],
+            returnType = itemsType,
+            invokeCode = (fun [path] ->
+                <@@
+                    seq {
+                        use r = DataFileReader<GenericRecord>.OpenReader(%%path: string)
+                        while r.HasNext() do
+                        yield! r.NextEntries // TODO iterate?
+                    }
+                @@>),
+            isStatic = true)
+
+
     let addProvidedTypes (enclosingType: ProvidedTypeDefinition) schema =
         let assembly = enclosingType.Assembly
         let schemas = namedSchemas schema
@@ -152,3 +188,8 @@ module AvroProvidedTypes =
         let ts = typeContainer assembly
         for t in types do ts.AddMember t.Value
         enclosingType.AddMember ts
+
+        let mainRecord = types.[schema.SchemaName]
+        [ getWriteMethod mainRecord schema
+          getReadMethod mainRecord ]
+        |> enclosingType.AddMembers

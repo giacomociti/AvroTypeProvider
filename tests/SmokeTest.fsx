@@ -8,7 +8,7 @@ open Avro
 open Avro.IO
 open Avro.File
 open Avro.Generic
-
+open System.Collections.Generic
 
 [<Literal>]
 let schema = """
@@ -40,11 +40,10 @@ let schema = """
 
 let s = Schema.Parse schema
 
-type X = AvroProvider<Schema=schema>
-type T = X.Types
-let f = X.Factory()
+type T = AvroProvider<Schema=schema>
 
-open System.Collections.Generic
+let f = T.Factory()
+
 
 let toDict items =
     let result = Dictionary()
@@ -68,17 +67,7 @@ let a = f.author(name="Joe",
 printfn "%A" (a.name, a.born, a.score, a.scoreOpt, a.codes)
 printfn "%A" (a.word.Value, a.suit.Value, a.inner.id, a.innerOpt, a.innerMap)
 
-let write items =
-    let gdw = GenericDatumWriter<GenericRecord>(s)
-    use w = DataFileWriter.OpenWriter(gdw, "test.avro")
-    items |> Seq.iter w.Append
-
-let read file =
-    let gdr = GenericDatumReader<GenericRecord>(s, s)
-    use r = DataFileReader<GenericRecord>.OpenReader(file)
-    r.NextEntries |> Seq.toList
-
-
-write [a]
-let a' = read "test.avro" |> List.exactlyOne
-a' = (a :> GenericRecord)
+let path = "test.avro"
+T.Write (path, [a])
+let a' = T.Read(path) |> Seq.exactlyOne
+a = a' // still false?
