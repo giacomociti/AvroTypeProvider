@@ -9,6 +9,7 @@ open Avro.IO
 open Avro.File
 open Avro.Generic
 
+
 [<Literal>]
 let schema = """
 {
@@ -18,43 +19,66 @@ let schema = """
         {"name": "name", "type": "string"},
         {"name": "born", "type": "int"},
         {"name": "word", "type": {"type": "fixed", "size": 2, "name": "Word"}},
-        {"name": "inner", "type": 
+        {"name": "inner", "type":
             {"type": "record",
              "name": "Inner",
              "fields": [{"name": "id", "type": "string"}]}},
         {"name": "innerOpt", "type": ["null", "Inner"]},
-        {"name": "innerMap", "type": {"type": "map", "values": "Inner"}},             
+        {"name": "innerMap", "type": {"type": "map", "values": "Inner"}},
         {"name": "score", "type": {"type": "array", "items": "int"}},
         {"name": "scoreOpt", "type": {"type": "array", "items": ["null", "int"]}},
-        {"name": "suit", "type": 
+        {"name": "suit", "type":
             { "type": "enum",
               "name": "Suit",
               "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"] }
 	    },
-        {"name": "codes", "type": {"type": "map", "values": "int"}}        
+        {"name": "codes", "type": {"type": "map", "values": "int"}}
     ]
 }
 """
 
 
-Schema.Parse schema
+let s = Schema.Parse schema
 
 type X = AvroProvider<Schema=schema>
 type T = X.Types
 let f = X.Factory()
+
+open System.Collections.Generic
+
+let toDict items =
+    let result = Dictionary()
+    for (k, v) in items do result.Add(k, v)
+    result
+
+let d = toDict ["k", f.Inner("C")]
+let d' = toDict ["A",1; "B",3]
 
 let a = f.author(name="Joe",
                  born=1900,
                  word = f.Word [| 2uy; 3uy |],
                  inner = f.Inner("AA"),
                  innerOpt = f.Inner("A"),
-                 innerMap = dict ["k", f.Inner("C")],
-                 score = ResizeArray([1;2]),
-                 scoreOpt = ResizeArray([System.Nullable(7)]),
+                 innerMap =  d,
+                 score = ([1;2] |> List.toArray),
+                 scoreOpt = ([System.Nullable(7)] |> List.toArray),
                  suit = f.Suit.CLUBS,
-                 codes = dict ["A",1; "B",3])
+                 codes = d')
 
 printfn "%A" (a.name, a.born, a.score, a.scoreOpt, a.codes)
 printfn "%A" (a.word.Value, a.suit.Value, a.inner.id, a.innerOpt, a.innerMap)
 
+let write items =
+    let gdw = GenericDatumWriter<GenericRecord>(s)
+    use w = DataFileWriter.OpenWriter(gdw, "test.avro")
+    items |> Seq.iter w.Append
 
+let read file =
+    let gdr = GenericDatumReader<GenericRecord>(s, s)
+    use r = DataFileReader<GenericRecord>.OpenReader(file)
+    r.NextEntries |> Seq.toList
+
+
+write [a]
+let a' = read "test.avro" |> List.exactlyOne
+a' = (a :> GenericRecord)

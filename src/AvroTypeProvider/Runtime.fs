@@ -60,34 +60,6 @@ module SchemaParsing =
 
 
 
-type Record = 
-    { GenericRecord: GenericRecord }
-
-    override this.ToString() = this.GenericRecord.ToString()
-
-    static member Create(genericRecord) =
-        { GenericRecord = genericRecord }
-
-type Fixed =
-    { GenericFixed: GenericFixed }
-
-    member this.Value = this.GenericFixed.Value
-
-    override this.ToString() = this.GenericFixed.ToString()
-
-    static member Create(genericFixed) =
-        { GenericFixed = genericFixed }
-    
-type Enum = 
-    { GenericEnum: GenericEnum }
-
-    member this.Value = this.GenericEnum.Value
-
-    override this.ToString() = this.GenericEnum.ToString()
-
-    static member Create(genericEnum) =
-        { GenericEnum = genericEnum }
-
 open SchemaParsing
 
 type Factory(schemaText) =
@@ -102,12 +74,12 @@ type Factory(schemaText) =
     let recordSchemas: IDictionary<_, RecordSchema> = filter Tag.Record
     let enumSchemas: IDictionary<_, EnumSchema> = filter Tag.Enumeration
     let fixedSchemas: IDictionary<_, FixedSchema> = filter Tag.Fixed
-        
+
     member __.CreateFixed(fullName, value) =
-        Fixed.Create(GenericFixed(fixedSchemas.[fullName], value))
+        GenericFixed(fixedSchemas.[fullName], value)
     member __.CreateEnum(fullName, value) =
-        Enum.Create(GenericEnum(enumSchemas.[fullName], value))
+        GenericEnum(enumSchemas.[fullName], value)
     member __.CreateRecord(fullName, values: array<string*obj>) =
         let genericRecord = GenericRecord (recordSchemas.[fullName])
         Array.iter genericRecord.Add values
-        Record.Create genericRecord
+        genericRecord

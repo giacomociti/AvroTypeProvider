@@ -4,6 +4,7 @@ open System.Collections.Generic
 open Microsoft.FSharp.Quotations
 open ProviderImplementation.ProvidedTypes
 open Avro
+open Avro.Generic
 open AvroTypes
 open SchemaParsing
 
@@ -29,10 +30,8 @@ module AvroProvidedTypes =
             invokeCode = fun [this; value] ->
                 <@@ (%%this :> Factory).CreateFixed(schemaName, %%value) @@>)
         |> factory.AddMember
-                
+
     let createEnum (factory: ProvidedTypeDefinition) (schema: EnumSchema) (providedType: ProvidedTypeDefinition) =
-        let schemaName = schema.Fullname
-        
         let enumFactory =
             ProvidedTypeDefinition(
                 assembly = providedType.Assembly,
@@ -41,7 +40,7 @@ module AvroProvidedTypes =
                 baseType = Some typeof<Factory>,
                 isErased = true,
                 hideObjectMethods = true)
-    
+        let schemaName = schema.Fullname
         schema.Symbols
         |> Seq.map (fun symbol ->
             ProvidedProperty(symbol, providedType,
@@ -60,14 +59,14 @@ module AvroProvidedTypes =
     let createRecord types (factory: ProvidedTypeDefinition) (schema:RecordSchema) (providedType: ProvidedTypeDefinition) =
 
         let getParameter (fieldName, fieldType) =
-            ProvidedParameter(fieldName, fieldType)         
+            ProvidedParameter(fieldName, fieldType)
 
         let fields =
-            schema.Fields 
+            schema.Fields
             |> Seq.map (fun f -> f.Name, getType types f.Schema)
             |> Seq.toList
         let fieldNames = fields |> List.map fst
-        let schemaName = schema.Fullname    
+        let schemaName = schema.Fullname
         ProvidedMethod(
             methodName = providedType.Name,
             parameters = (fields |> List.map getParameter),
@@ -76,6 +75,7 @@ module AvroProvidedTypes =
               ( let values =
                   [ for name, par in List.zip fieldNames pars do
                     let v = Expr.Coerce(par, typeof<obj>)
+                    // TODO adjust array, map and nullable types?
                     yield Expr.NewTuple [Expr.Value name; v]
                   ]
                 let array = Expr.NewArray(typeof<string*obj>, values)
@@ -102,20 +102,20 @@ module AvroProvidedTypes =
         let getProperty (fieldName, fieldType) =
             ProvidedProperty(fieldName, fieldType,
                 getterCode = (fun [record] ->
-                    <@@ (%%record: Record).GenericRecord.Item fieldName @@>))
+                    <@@ (%%record: GenericRecord).Item fieldName @@>))
 
-        schema.Fields 
+        schema.Fields
         |> Seq.map (fun f -> getProperty(f.Name, getType types f.Schema))
         |> Seq.toList
-        |> providedType.AddMembers        
+        |> providedType.AddMembers
 
 
     let private providedType assembly (schema: NamedSchema) =
         let baseType =
             match schema with
-            | Record _ -> typeof<Record>
-            | Fixed _ -> typeof<Fixed>
-            | Enum _ -> typeof<Enum>
+            | Record _ -> typeof<GenericRecord>
+            | Fixed _ -> typeof<GenericFixed>
+            | Enum _ -> typeof<GenericEnum>
         ProvidedTypeDefinition(
             assembly = assembly,
             namespaceName = schema.Namespace,
@@ -140,7 +140,6 @@ module AvroProvidedTypes =
         | Record schema -> createRecord types factory schema providedType
         | Enum schema -> createEnum factory schema providedType
         | Fixed schema -> createFixed factory schema providedType
-            
 
     let addProvidedTypes (enclosingType: ProvidedTypeDefinition) schema =
         let assembly = enclosingType.Assembly

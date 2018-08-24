@@ -5,11 +5,11 @@ open SchemaParsing
 
 module AvroTypes =
 
-    let arrayType t =
-        typedefof<IList<_>>.MakeGenericType [| t |]
+    let arrayType (t: System.Type) =
+        t.MakeArrayType()
 
     let mapType t =
-        typedefof<IDictionary<_, _>>.MakeGenericType [| typeof<string>; t |]
+        typedefof<Dictionary<_, _>>.MakeGenericType [| typeof<string>; t |]
 
     let nullableType t =
         typedefof<System.Nullable<_>>.MakeGenericType [| t |]

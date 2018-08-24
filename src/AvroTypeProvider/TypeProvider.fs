@@ -12,10 +12,9 @@ type TypeProvider (config: TypeProviderConfig) as this =
 
     let ns = "Avro"
     let asm = Assembly.GetExecutingAssembly()
-    //let providedAssembly = ProvidedAssembly()
 
     // check we contain a copy of runtime files, and are not referencing the runtime DLL
-    do assert (typeof<Record>.Assembly.GetName().Name = asm.GetName().Name) 
+    do assert (typeof<Factory>.Assembly.GetName().Name = asm.GetName().Name)
 
     let createType (typeName, schema) =
         let json =
