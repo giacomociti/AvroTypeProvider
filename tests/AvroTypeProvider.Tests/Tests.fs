@@ -8,7 +8,7 @@ type T = AvroProvider<"""
     "type": "record",
     "name": "author",
     "fields": [
-        {"name": "name", "type": "string"},
+        {"name": "name", "type": "string", "doc": "this is the name"},
         {"name": "born", "type": "int"} ]
 }
 """>

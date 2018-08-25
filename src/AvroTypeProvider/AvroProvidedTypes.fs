@@ -105,10 +105,16 @@ module AvroProvidedTypes =
                 getterCode = (fun [record] ->
                     <@@ (%%record: GenericRecord).Item fieldName @@>))
 
-        schema.Fields
-        |> Seq.map (fun f -> getProperty(f.Name, getType types f.Schema))
-        |> Seq.toList
-        |> providedType.AddMembers
+        let properties =
+            schema.Fields
+            |> Seq.map (fun f ->
+                let prop = getProperty(f.Name, getType types f.Schema)
+                if not (isNull f.Documentation)
+                then prop.AddXmlDoc(f.Documentation)
+                prop)
+            |> Seq.toList
+
+        providedType.AddMembers properties
 
 
     let private providedType assembly (schema: NamedSchema) =
@@ -171,7 +177,7 @@ module AvroProvidedTypes =
                     seq {
                         use r = DataFileReader<GenericRecord>.OpenReader(%%path: string)
                         while r.HasNext() do
-                        yield! r.NextEntries // TODO iterate?
+                        yield! r.NextEntries
                     }
                 @@>),
             isStatic = true)
