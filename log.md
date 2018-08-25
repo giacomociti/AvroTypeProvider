@@ -5,7 +5,7 @@
 - git init
 - curl -o .gitignore https://www.gitignore.io/api/fsharp,linux,windows,macos,vim,emacs,visualstudio,visualstudiocode
 
-### Add _Paket_ 
+### Add _Paket_
 
 - mkdir .paket
 - cd .paket
@@ -32,8 +32,19 @@
 
 ### Reference Avro library
 
-- dotnet add package Confluent.Apache.Avro --version 1.7.7.5 
+- dotnet add package Confluent.Apache.Avro --version 1.7.7.5
 
 ### Reference libraries in test
 
 - Hack: Referenced downloaded nuget packages in smoke test
+
+### Add test solution
+
+- cd tests
+- mkdir AvroTypeProvider.Tests
+- cd AvroTypeProvider.Tests
+- dotnet new sln
+- dotnet new xunit -lang F#
+- dotnet sln add AvroTypeProvider.Tests.fsproj
+- dotnet build
+- dotnet test
