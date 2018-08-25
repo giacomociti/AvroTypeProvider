@@ -1,13 +1,12 @@
-#I "../src/AvroTypeProvider/bin/Debug/netstandard2.0"
-
-#r "libs/confluent.apache.avro.1.7.7.5.nupkg_FILES/lib/netstandard2.0/Confluent.Apache.Avro.dll"
-#r "libs/newtonsoft.json.11.0.2.nupkg_FILES/lib/netstandard2.0/Newtonsoft.Json.dll"
+#I "../src/AvroTypeProvider/bin/Debug/net462"
+#r "Newtonsoft.Json.dll"
+#r "Confluent.Apache.Avro.dll"
 #r "AvroTypeProvider.dll"
 
 open Avro
-open Avro.IO
-open Avro.File
-open Avro.Generic
+// open Avro.IO
+// open Avro.File
+// open Avro.Generic
 open System.Collections.Generic
 
 [<Literal>]
@@ -44,7 +43,6 @@ type T = AvroProvider<schema>
 
 let f = T.Factory()
 
-
 let toDict items =
     let result = Dictionary()
     for (k, v) in items do result.Add(k, v)
@@ -52,6 +50,7 @@ let toDict items =
 
 let d = toDict ["k", f.Inner("C")]
 let d' = toDict ["A",1; "B",3]
+
 
 let a = f.author(name="Joe",
                  born=1900,
