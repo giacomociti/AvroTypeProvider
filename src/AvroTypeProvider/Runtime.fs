@@ -61,6 +61,7 @@ module SchemaParsing =
 
 
 open SchemaParsing
+open System.ComponentModel
 
 type Factory(schemaText) =
     let schemas = namedSchemas (Schema.Parse schemaText)
@@ -75,10 +76,15 @@ type Factory(schemaText) =
     let enumSchemas: IDictionary<_, EnumSchema> = filter Tag.Enumeration
     let fixedSchemas: IDictionary<_, FixedSchema> = filter Tag.Fixed
 
+    [<EditorBrowsableAttribute(EditorBrowsableState.Never)>]
     member __.CreateFixed(fullName, value) =
         GenericFixed(fixedSchemas.[fullName], value)
+
+    [<EditorBrowsableAttribute(EditorBrowsableState.Never)>]
     member __.CreateEnum(fullName, value) =
         GenericEnum(enumSchemas.[fullName], value)
+
+    [<EditorBrowsableAttribute(EditorBrowsableState.Never)>]
     member __.CreateRecord(fullName, values: array<string*obj>) =
         let genericRecord = GenericRecord (recordSchemas.[fullName])
         Array.iter genericRecord.Add values
